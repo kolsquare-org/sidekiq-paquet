@@ -1,0 +1,42 @@
+module Sidekiq
+  module Bulk
+    module Batch
+
+      def self.append(worker_name, item, queue, redis_pool)
+        now = Time.now.to_f
+        item['enqueued_at'.freeze] = now
+
+        redis_pool.with do |conn|
+          conn.multi do
+            conn.sadd('bulks'.freeze, worker_name)
+            conn.rpush("bulk:#{worker_name}", Sidekiq.dump_json(item))
+          end
+        end
+      end
+
+      def self.enqueue_jobs
+        Sidekiq.redis do |conn|
+          workers = conn.smembers('bulks'.freeze)
+
+          workers.each do |worker|
+            klass = worker.constantize
+            opts  = klass.get_sidekiq_options.fetch(:bulk, {})
+            items = conn.lrange("bulks:#{worker}", 0, -1)
+            items.map! { |i| Sidekiq.load_json(i) }
+
+            items.each_slice(opts.fetch(:size, Sidekiq::Bulk.default_bulk_size)]) do |vs|
+              Sidekiq::Client.push(
+                'class' => worker,
+                'queue' => opts[:queue],
+                'args'  => vs
+              )
+            end
+
+            conn.ltrim("bulks:#{worker}", items.size, -1)
+          end
+        end
+      end
+
+    end
+  end
+end

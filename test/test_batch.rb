@@ -34,7 +34,6 @@ class TestBatch < Minitest::Test
         items.each { |i| Sidekiq::Bulk::Batch.append('TestWorker', i, nil) }
       end
 
-
       it 'enqueues regular job with bulk arguments' do
         Sidekiq::Bulk::Batch.enqueue_jobs
 
@@ -45,10 +44,15 @@ class TestBatch < Minitest::Test
         end
       end
 
-      it 'has a custom bulk size' do
-        TestWorker.get_sidekiq_options['bulk'] = { size: 1 }
-        Sidekiq::Bulk::Batch.enqueue_jobs
-        assert_equal 2, @queue.size
+      it 'allows a custom bulk size' do
+        begin
+          opts = TestWorker.get_sidekiq_options
+          TestWorker.sidekiq_options_hash = opts.merge('bulk' => { size: 1 })
+          Sidekiq::Bulk::Batch.enqueue_jobs
+          assert_equal 2, @queue.size
+        ensure
+          TestWorker.sidekiq_options_hash = opts
+        end
       end
     end
   end

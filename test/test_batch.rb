@@ -44,6 +44,13 @@ class TestBatch < Minitest::Test
         end
       end
 
+      it 'removes items in the bulk queue after processing' do
+        list = Sidekiq::Bulk::List.new('TestWorker')
+        assert_equal 2, list.size
+        Sidekiq::Bulk::Batch.enqueue_jobs
+        assert_equal 0, list.size
+      end
+
       it 'allows a custom bulk size' do
         begin
           opts = TestWorker.get_sidekiq_options

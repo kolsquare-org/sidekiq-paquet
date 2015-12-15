@@ -31,7 +31,7 @@ module Sidekiq
               )
             end
 
-            conn.ltrim("bulks:#{worker}", items.size, -1)
+            conn.ltrim("bulk:#{worker}", items.size, -1)
           end
         end
       end

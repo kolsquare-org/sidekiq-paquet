@@ -1,6 +1,7 @@
 require 'sidekiq'
 require 'sidekiq/bulk/version'
 
+require 'sidekiq/bulk/list'
 require 'sidekiq/bulk/batch'
 require 'sidekiq/bulk/middleware'
 require 'sidekiq/bulk/poller'

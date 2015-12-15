@@ -1,4 +1,5 @@
 require 'sidekiq/util'
+require 'sidekiq/scheduled'
 
 module Sidekiq
   module Bulk

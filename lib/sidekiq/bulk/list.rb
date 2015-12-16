@@ -12,6 +12,10 @@ module Sidekiq
       def items
         Sidekiq.redis { |c| c.lrange(@lname, 0, -1) }
       end
+
+      def clear
+        Sidekiq.redis { |c| c.del(@lname) }
+      end
     end
   end
 end

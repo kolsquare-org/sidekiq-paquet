@@ -4,19 +4,21 @@ class TestBatch < Minitest::Test
   describe 'batch' do
     before do
       Sidekiq.redis { |c| c.flushdb }
+      @item = { 'class' => 'TestWorker' }
     end
 
     describe '#append' do
       it 'appends to the list of bulks' do
-        Sidekiq::Bulk::Batch.append('TestWorker', {}, nil)
+        Sidekiq::Bulk::Batch.append(@item)
         assert_equal 1, Sidekiq.redis { |c| c.scard 'bulks' }
+        assert_equal 'TestWorker', Sidekiq.redis { |c| c.srandmember 'bulks' }
       end
 
       it 'appends the args to the bulk queue' do
-        item = { 'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default' }
+        @item.merge!({ 'args' => ['foo', 1], 'queue' => 'default' })
         list = Sidekiq::Bulk::List.new('TestWorker')
 
-        Sidekiq::Bulk::Batch.append('TestWorker', item, nil)
+        Sidekiq::Bulk::Batch.append(@item)
         arg = list.items.first
 
         assert_equal 1, list.size
@@ -31,7 +33,7 @@ class TestBatch < Minitest::Test
           { 'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default' },
           { 'class' => 'TestWorker', 'args' => ['bar', 3], 'queue' => 'default' }
         ]
-        items.each { |i| Sidekiq::Bulk::Batch.append('TestWorker', i, nil) }
+        items.each { |i| Sidekiq::Bulk::Batch.append(i) }
       end
 
       it 'enqueues regular job with bulk arguments' do

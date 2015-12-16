@@ -2,8 +2,9 @@ module Sidekiq
   module Bulk
     module Batch
 
-      def self.append(worker_name, item, queue)
-        args = item.fetch('args', [])
+      def self.append(item)
+        worker_name = item['class'.freeze]
+        args = item.fetch('args'.freeze, [])
 
         Sidekiq.redis do |conn|
           conn.multi do

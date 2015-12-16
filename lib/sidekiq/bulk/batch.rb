@@ -23,7 +23,7 @@ module Sidekiq
             items = conn.lrange("bulk:#{worker}", 0, -1)
             items.map! { |i| Sidekiq.load_json(i) }
 
-            items.each_slice(opts.fetch('bulk_size'.freeze, Sidekiq::Bulk.default_bulk_size)) do |vs|
+            items.each_slice(opts.fetch('bulk_size'.freeze, Sidekiq::Bulk.options[:default_bulk_size])) do |vs|
               Sidekiq::Client.push(
                 'class' => worker,
                 'queue' => opts['queue'.freeze],

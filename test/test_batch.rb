@@ -64,11 +64,13 @@ class TestBatch < Minitest::Test
 
       it 'uses the default bulk size if none is provided' do
         begin
-          old, Sidekiq::Bulk.default_bulk_size = Sidekiq::Bulk.default_bulk_size, 1
+          old = Sidekiq::Bulk.options[:default_bulk_size]
+          Sidekiq::Bulk.options[:default_bulk_size] = 1
+
           Sidekiq::Bulk::Batch.enqueue_jobs
           assert_equal 2, @queue.size
         ensure
-          Sidekiq::Bulk.default_bulk_size = old
+          Sidekiq::Bulk.options[:default_bulk_size] = old
         end
       end
     end

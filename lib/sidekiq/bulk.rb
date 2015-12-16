@@ -8,12 +8,19 @@ require 'sidekiq/bulk/poller'
 
 module Sidekiq
   module Bulk
-    def self.default_bulk_size
-      @default_bulk_size ||= 100
+    DEFAULTS = {
+      default_bulk_size: 100,
+      bulk_flush_interval: nil,
+      average_bulk_flush_interval: 15,
+      dynamic_interval_scaling: true
+    }
+
+    def self.options
+      @options ||= DEFAULTS.dup
     end
 
-    def self.default_bulk_size=(value)
-      @default_bulk_size = value
+    def self.options=(opts)
+      @options = opts
     end
   end
 end

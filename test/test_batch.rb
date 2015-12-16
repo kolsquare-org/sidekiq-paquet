@@ -54,11 +54,21 @@ class TestBatch < Minitest::Test
       it 'allows a custom bulk size' do
         begin
           opts = TestWorker.get_sidekiq_options
-          TestWorker.sidekiq_options_hash = opts.merge('bulk' => { size: 1 })
+          TestWorker.sidekiq_options_hash = opts.merge('bulk_size' => 1)
           Sidekiq::Bulk::Batch.enqueue_jobs
           assert_equal 2, @queue.size
         ensure
           TestWorker.sidekiq_options_hash = opts
+        end
+      end
+
+      it 'uses the default bulk size if none is provided' do
+        begin
+          old, Sidekiq::Bulk.default_bulk_size = Sidekiq::Bulk.default_bulk_size, 1
+          Sidekiq::Bulk::Batch.enqueue_jobs
+          assert_equal 2, @queue.size
+        ensure
+          Sidekiq::Bulk.default_bulk_size = old
         end
       end
     end

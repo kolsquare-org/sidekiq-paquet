@@ -25,12 +25,14 @@ module Sidekiq
   end
 end
 
-Sidekiq.configure_server do |config|
+Sidekiq.configure_client do |config|
   config.client_middleware do |chain|
     chain.add Sidekiq::Bulk::Middleware
   end
+end
 
-  config.server_middleware do |chain|
+Sidekiq.configure_server do |config|
+  config.client_middleware do |chain|
     chain.add Sidekiq::Bulk::Middleware
   end
 

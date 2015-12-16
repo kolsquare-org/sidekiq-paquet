@@ -1,7 +1,7 @@
 module Sidekiq
   module Bulk
     class Middleware
-      def call(worker, item, queue)
+      def call(worker, item, queue, redis_pool = nil)
         klass     = worker.class
         sdkq_opts = klass.get_sidekiq_options
 

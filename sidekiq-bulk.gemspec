@@ -9,8 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["ccocchi"]
   spec.email         = ["cocchi.c@gmail.com"]
 
-  spec.summary       = %q{Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{Write a longer description or delete this line.}
+  spec.summary       = "Bulk processing for sidekiq 4+"
   spec.homepage      = "https://github.com/ccocchi/sidekiq-bulk"
   spec.license       = "MIT"
 

@@ -1,41 +1,66 @@
 # Sidekiq::Bulk
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/sidekiq/bulk`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+Instead of processing similar sidekiq jobs one at a time, process them in bulk.
+Useful for grouping background API calls or intensive database inserts.
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
 ```ruby
-gem 'sidekiq-bulk'
+gem install 'sidekiq-bulk'
 ```
 
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install sidekiq-bulk
+sidekiq-bulk requires sidekiq 4+. If you're using sidekiq < 4, you can check [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping/) for similar features.
 
 ## Usage
 
-TODO: Write usage instructions here
+Add `bulk` options to your worker's `sidekiq_options` to have them processed in bulk. The size of the bulk can also be configured per worker. If not, the `Sidekiq::Bulk.options[:default_bulk_size]` is used.
 
-## Development
+```ruby
+class ElasticIndexerWorker
+  include Sidekiq::Worker
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+  sidekiq_options bulk: true, bulk_size: 100
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+  def perform(values)
+    # Perform work with the array of values
+  end
+end
+```
+
+Instead of being processed normally by sidekiq, jobs' arguments will be stored into a separate queue and periodically, a poller will retrieve these arguments and enqueue a regular sidekiq job with grouped args.
+Thus, your worker will only be invoked with an array of values, never with separate values themselves.
+
+For example, if you call `perform_async` twice on the previous worker
+
+```ruby
+ElasticIndexerWorker.perform_async({ delete: { _index: 'users', _id: 1, _type: 'user' } })
+ElasticIndexerWorker.perform_async({ delete: { _index: 'users', _id: 2, _type: 'user' } })
+```
+
+the worker instance will receive these values as a single argument
+
+```ruby
+[
+  { delete: { _index: 'users', _id: 1, _type: 'user' } },
+  { delete: { _index: 'users', _id: 2, _type: 'user' } }
+]
+```
+
+## Configuration
+
+You can change global configuration by modifying the `Sidekiq::Bulk.options` hash.
+
+```
+  Sidekiq::Bulk.options[:default_bulk_size] = 500 # Default is 100
+  Sidekiq::Bulk.options[:average_bulk_flush_interval] = 30 # Default is 15
+```
+
+The `average_bulk_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_bulk_flush_interval` to 15, each process will check for new bulk jobs every 75 seconds -- in average the bulk queue will be checked every 15 seconds.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/sidekiq-bulk. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](contributor-covenant.org) code of conduct.
-
+Bug reports and pull requests are welcome on GitHub at https://github.com/ccocchi/sidekiq-bulk. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](contributor-covenant.org) code of conduct.
 
 ## License
 
 The gem is available as open source under the terms of the [MIT License](http://opensource.org/licenses/MIT).
-

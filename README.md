@@ -1,6 +1,6 @@
 # Sidekiq::Bulk
 
-Instead of processing similar sidekiq jobs one at a time, process them in bulk.
+Instead of processing similar Sidekiq jobs one at a time, process them in bulk.
 Useful for grouping background API calls or intensive database inserts.
 
 ## Installation
@@ -9,11 +9,11 @@ Useful for grouping background API calls or intensive database inserts.
 gem install 'sidekiq-bulk'
 ```
 
-sidekiq-bulk requires sidekiq 4+. If you're using sidekiq < 4, you can check [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping/) for similar features.
+sidekiq-bulk requires Sidekiq 4+. If you're using Sidekiq < 4, you can check [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping/) for similar features.
 
 ## Usage
 
-Add `bulk` options to your worker's `sidekiq_options` to have them processed in bulk. The size of the bulk can also be configured per worker. If not, the `Sidekiq::Bulk.options[:default_bulk_size]` is used.
+Add `bulk: true` option to your worker's `sidekiq_options` to have jobs processed in bulk. The size of the bulk can be configured per worker. If not specified, the `Sidekiq::Bulk.options[:default_bulk_size]` is used.
 
 ```ruby
 class ElasticIndexerWorker
@@ -27,8 +27,8 @@ class ElasticIndexerWorker
 end
 ```
 
-Instead of being processed normally by sidekiq, jobs' arguments will be stored into a separate queue and periodically, a poller will retrieve these arguments and enqueue a regular sidekiq job with grouped args.
-Thus, your worker will only be invoked with an array of values, never with separate values themselves.
+Instead of being processed by Sidekiq, jobs will be stored into a separate queue and periodically, a poller will retrieve them by slice of `bulk_size` and enqueue a regular Sidekiq job with that bulk as argument.
+Thus, your worker will only be invoked with an array of values, never with single values themselves.
 
 For example, if you call `perform_async` twice on the previous worker
 
@@ -55,11 +55,11 @@ You can change global configuration by modifying the `Sidekiq::Bulk.options` has
   Sidekiq::Bulk.options[:average_bulk_flush_interval] = 30 # Default is 15
 ```
 
-The `average_bulk_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_bulk_flush_interval` to 15, each process will check for new bulk jobs every 75 seconds -- in average the bulk queue will be checked every 15 seconds.
+The `average_bulk_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_bulk_flush_interval` to 15, each process will check for new bulk jobs every 75 seconds -- so that in average, the bulk queue will be checked every 15 seconds.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ccocchi/sidekiq-bulk. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/ccocchi/sidekiq-bulk. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 

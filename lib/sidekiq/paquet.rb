@@ -1,13 +1,13 @@
 require 'sidekiq'
-require 'sidekiq/bulk/version'
+require 'sidekiq/paquet/version'
 
-require 'sidekiq/bulk/list'
-require 'sidekiq/bulk/batch'
-require 'sidekiq/bulk/middleware'
-require 'sidekiq/bulk/poller'
+require 'sidekiq/paquet/list'
+require 'sidekiq/paquet/batch'
+require 'sidekiq/paquet/middleware'
+require 'sidekiq/paquet/poller'
 
 module Sidekiq
-  module Bulk
+  module Paquet
     DEFAULTS = {
       default_bulk_size: 100,
       bulk_flush_interval: nil,
@@ -27,17 +27,17 @@ end
 
 Sidekiq.configure_client do |config|
   config.client_middleware do |chain|
-    chain.add Sidekiq::Bulk::Middleware
+    chain.add Sidekiq::Paquet::Middleware
   end
 end
 
 Sidekiq.configure_server do |config|
   config.client_middleware do |chain|
-    chain.add Sidekiq::Bulk::Middleware
+    chain.add Sidekiq::Paquet::Middleware
   end
 
   config.on(:startup) do
-    config.options[:bulk_poller] = Sidekiq::Bulk::Poller.new
+    config.options[:bulk_poller] = Sidekiq::Paquet::Poller.new
     config.options[:bulk_poller].start
   end
 

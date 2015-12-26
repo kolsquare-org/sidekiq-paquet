@@ -9,16 +9,16 @@ class TestBatch < Minitest::Test
 
     describe '#append' do
       it 'appends to the list of bulks' do
-        Sidekiq::Bulk::Batch.append(@item)
+        Sidekiq::Paquet::Batch.append(@item)
         assert_equal 1, Sidekiq.redis { |c| c.scard 'bulks' }
         assert_equal 'TestWorker', Sidekiq.redis { |c| c.srandmember 'bulks' }
       end
 
       it 'appends the args to the bulk queue' do
         @item.merge!({ 'args' => ['foo', 1], 'queue' => 'default' })
-        list = Sidekiq::Bulk::List.new('TestWorker')
+        list = Sidekiq::Paquet::List.new('TestWorker')
 
-        Sidekiq::Bulk::Batch.append(@item)
+        Sidekiq::Paquet::Batch.append(@item)
         arg = list.items.first
 
         assert_equal 1, list.size
@@ -33,11 +33,11 @@ class TestBatch < Minitest::Test
           { 'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default' },
           { 'class' => 'TestWorker', 'args' => ['bar', 3], 'queue' => 'default' }
         ]
-        items.each { |i| Sidekiq::Bulk::Batch.append(i) }
+        items.each { |i| Sidekiq::Paquet::Batch.append(i) }
       end
 
       it 'enqueues regular job with bulk arguments' do
-        Sidekiq::Bulk::Batch.enqueue_jobs
+        Sidekiq::Paquet::Batch.enqueue_jobs
 
         assert_equal 1, @queue.size
         @queue.each do |job|
@@ -47,9 +47,9 @@ class TestBatch < Minitest::Test
       end
 
       it 'removes items in the bulk queue after processing' do
-        list = Sidekiq::Bulk::List.new('TestWorker')
+        list = Sidekiq::Paquet::List.new('TestWorker')
         assert_equal 2, list.size
-        Sidekiq::Bulk::Batch.enqueue_jobs
+        Sidekiq::Paquet::Batch.enqueue_jobs
         assert_equal 0, list.size
       end
 
@@ -57,7 +57,7 @@ class TestBatch < Minitest::Test
         begin
           opts = TestWorker.get_sidekiq_options
           TestWorker.sidekiq_options_hash = opts.merge('bulk_size' => 1)
-          Sidekiq::Bulk::Batch.enqueue_jobs
+          Sidekiq::Paquet::Batch.enqueue_jobs
           assert_equal 2, @queue.size
         ensure
           TestWorker.sidekiq_options_hash = opts
@@ -66,13 +66,13 @@ class TestBatch < Minitest::Test
 
       it 'uses the default bulk size if none is provided' do
         begin
-          old = Sidekiq::Bulk.options[:default_bulk_size]
-          Sidekiq::Bulk.options[:default_bulk_size] = 1
+          old = Sidekiq::Paquet.options[:default_bulk_size]
+          Sidekiq::Paquet.options[:default_bulk_size] = 1
 
-          Sidekiq::Bulk::Batch.enqueue_jobs
+          Sidekiq::Paquet::Batch.enqueue_jobs
           assert_equal 2, @queue.size
         ensure
-          Sidekiq::Bulk.options[:default_bulk_size] = old
+          Sidekiq::Paquet.options[:default_bulk_size] = old
         end
       end
     end

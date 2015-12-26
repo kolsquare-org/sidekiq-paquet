@@ -1,7 +1,7 @@
 $TESTING = true
 
 require 'minitest/autorun'
-require 'sidekiq/bulk'
+require 'sidekiq/paquet'
 
 Sidekiq.logger.level = Logger::ERROR
 

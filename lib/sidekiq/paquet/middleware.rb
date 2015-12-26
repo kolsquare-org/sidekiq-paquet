@@ -1,5 +1,5 @@
 module Sidekiq
-  module Bulk
+  module Paquet
     class Middleware
       def call(worker, item, queue, redis_pool = nil)
         if item['bulk'.freeze]

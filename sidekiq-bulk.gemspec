@@ -1,16 +1,16 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'sidekiq/bulk/version'
+require 'sidekiq/paquet/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "sidekiq-bulk"
-  spec.version       = Sidekiq::Bulk::VERSION
+  spec.name          = "sidekiq-paquet"
+  spec.version       = Sidekiq::Paquet::VERSION
   spec.authors       = ["ccocchi"]
   spec.email         = ["cocchi.c@gmail.com"]
 
   spec.summary       = "Bulk processing for sidekiq 4+"
-  spec.homepage      = "https://github.com/ccocchi/sidekiq-bulk"
+  spec.homepage      = "https://github.com/ccocchi/sidekiq-paquet"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }

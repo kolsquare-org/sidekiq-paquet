@@ -5,7 +5,7 @@ class TestMiddleware < Minitest::Test
     before do
       Sidekiq.redis { |c| c.flushdb }
       @chain = Sidekiq::Middleware::Chain.new
-      @chain.add Sidekiq::Bulk::Middleware
+      @chain.add Sidekiq::Paquet::Middleware
       @worker = Minitest::Mock.new
     end
 
@@ -17,7 +17,7 @@ class TestMiddleware < Minitest::Test
 
     it 'does not yield and append to batch if worker uses bulk' do
       result = nil
-      list   = Sidekiq::Bulk::List.new('TestWorker')
+      list   = Sidekiq::Paquet::List.new('TestWorker')
       item   = { 'class' => 'TestWorker', 'bulk' => true }
 
       @chain.invoke(@worker, item, 'default') { result = true }

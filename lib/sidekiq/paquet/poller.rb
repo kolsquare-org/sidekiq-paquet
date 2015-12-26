@@ -2,7 +2,7 @@ require 'sidekiq/util'
 require 'sidekiq/scheduled'
 
 module Sidekiq
-  module Bulk
+  module Paquet
     class Poller < Sidekiq::Scheduled::Poller
 
       def initialize
@@ -55,10 +55,10 @@ module Sidekiq
       #
       # We only do this if poll_interval_average is unset (the default).
       def poll_interval_average
-        if Sidekiq::Bulk.options[:dynamic_interval_scaling]
+        if Sidekiq::Paquet.options[:dynamic_interval_scaling]
           scaled_poll_interval
         else
-          Sidekiq::Bulk.options[:bulk_flush_interval] ||= scaled_poll_interval
+          Sidekiq::Paquet.options[:bulk_flush_interval] ||= scaled_poll_interval
         end
       end
 
@@ -68,7 +68,7 @@ module Sidekiq
       def scaled_poll_interval
         pcount = Sidekiq::ProcessSet.new.size
         pcount = 1 if pcount == 0
-        pcount * Sidekiq::Bulk.options[:average_bulk_flush_interval]
+        pcount * Sidekiq::Paquet.options[:average_bulk_flush_interval]
       end
 
       def initial_wait

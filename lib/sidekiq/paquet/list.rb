@@ -1,5 +1,5 @@
 module Sidekiq
-  module Bulk
+  module Paquet
     class List
       def initialize(name)
         @lname = "bulk:#{name}"

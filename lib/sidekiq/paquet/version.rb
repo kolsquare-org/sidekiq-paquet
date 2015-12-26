@@ -1,5 +1,5 @@
 module Sidekiq
-  module Bulk
+  module Paquet
     VERSION = '0.1.0'
   end
 end

@@ -21,7 +21,7 @@ class ElasticIndexerWorker
 
   sidekiq_options bulk: true, bulk_size: 100
 
-  def perform(values)
+  def perform(*values)
     # Perform work with the array of values
   end
 end

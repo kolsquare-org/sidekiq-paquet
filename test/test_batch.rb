@@ -10,8 +10,8 @@ class TestBatch < Minitest::Test
     describe '#append' do
       it 'appends to the list of bulks' do
         Sidekiq::Paquet::Batch.append(@item)
-        assert_equal 1, Sidekiq.redis { |c| c.scard 'bulks' }
-        assert_equal 'TestWorker', Sidekiq.redis { |c| c.srandmember 'bulks' }
+        assert_equal 1, Sidekiq.redis { |c| c.zcard 'bulks' }
+        assert_equal 'TestWorker', Sidekiq.redis { |c| c.zrange('bulks', 0, -1).first }
       end
 
       it 'appends the args to the bulk queue' do
@@ -73,6 +73,34 @@ class TestBatch < Minitest::Test
           assert_equal 2, @queue.size
         ensure
           Sidekiq::Paquet.options[:default_bulk_size] = old
+        end
+      end
+
+      it 'allows a minimum flush interval' do
+        begin
+          opts = TestWorker.get_sidekiq_options
+          TestWorker.sidekiq_options_hash = opts.merge('bulk_minimum_interval' => 10)
+
+          Time.stub :now, 200 do
+            Sidekiq::Paquet::Batch.enqueue_jobs
+            assert_equal 1, @queue.size
+          end
+
+          Sidekiq::Paquet::Batch.append({
+            'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default'
+          })
+
+          Time.stub :now, 205 do
+            Sidekiq::Paquet::Batch.enqueue_jobs
+            assert_equal 1, @queue.size
+          end
+
+          Time.stub :now, 215 do
+            Sidekiq::Paquet::Batch.enqueue_jobs
+            assert_equal 2, @queue.size
+          end
+        ensure
+          TestWorker.sidekiq_options_hash = opts
         end
       end
     end

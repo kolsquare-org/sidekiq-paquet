@@ -8,19 +8,22 @@ module Sidekiq
 
         Sidekiq.redis do |conn|
           conn.multi do
-            conn.sadd('bulks'.freeze, worker_name)
+            conn.zadd('bulks'.freeze, 0, worker_name, nx: true)
             conn.rpush("bulk:#{worker_name}", Sidekiq.dump_json(args))
           end
         end
       end
 
       def self.enqueue_jobs
+        now = Time.now.to_f
         Sidekiq.redis do |conn|
-          workers = conn.smembers('bulks'.freeze)
+          workers = conn.zrangebyscore('bulks'.freeze, '-inf', now)
 
           workers.each do |worker|
             klass = worker.constantize
             opts  = klass.get_sidekiq_options
+            min_interval = opts['bulk_minimum_interval'.freeze]
+
             items = conn.lrange("bulk:#{worker}", 0, -1)
             items.map! { |i| Sidekiq.load_json(i) }
 
@@ -33,6 +36,7 @@ module Sidekiq
             end
 
             conn.ltrim("bulk:#{worker}", items.size, -1)
+            conn.zadd('bulks'.freeze, now + min_interval, worker) if min_interval
           end
         end
       end

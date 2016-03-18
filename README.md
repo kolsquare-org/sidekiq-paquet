@@ -1,6 +1,6 @@
 # Sidekiq::Paquet
 
-Instead of enqueueing and processing jobs one at a time, enqueue them one by one process them in bulk.
+Instead of enqueueing and processing jobs one at a time, enqueue them one by one and process them in bulk.
 Useful for grouping background API calls or intensive database inserts coming from multiple sources.
 
 ## Installation
@@ -9,7 +9,7 @@ Useful for grouping background API calls or intensive database inserts coming fr
 gem install 'sidekiq-paquet'
 ```
 
-sidekiq-bulk requires Sidekiq 4+. If you're using Sidekiq < 4, take a look at [sidekiq-grouping](https://github.com/gzigzigzeo/sidekiq-grouping/) for similar features.
+sidekiq-bulk requires Sidekiq 4+.
 
 ## Usage
 
@@ -45,6 +45,8 @@ the worker instance will receive these values as a single argument
   { delete: { _index: 'users', _id: 2, _type: 'user' } }
 ]
 ```
+
+Every time polling happens, `sidekiq-paquet` will try to process all your workers marked for bulk. If you want to limit the time between two polling per worker, you can pass the `bulk_minimum_interval` option to sidekiq options.
 
 ## Configuration
 

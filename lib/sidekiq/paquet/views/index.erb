@@ -1,0 +1,21 @@
+<h3><%= t('Queues') %></h3>
+
+<div class="table_container">
+  <table class="table table-hover table-bordered table-striped table-white">
+    <thead>
+      <th><%= t('Worker') %></th>
+      <th><%= t('Queue') %></th>
+      <th><%= t('Size') %></th>
+      <th><%= t('Actions') %></th>
+    </thead>
+    <% @lists.each do |list| %>
+      <tr>
+        <td><%= list.worker_name %></td>
+        <td><%= list.queue %></td>
+        <td><%= number_with_delimiter(list.size) %> </td>
+        <td width="20%">
+        </td>
+      </tr>
+    <% end %>
+  </table>
+</div>

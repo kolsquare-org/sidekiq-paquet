@@ -9,13 +9,13 @@ class TestMiddleware < Minitest::Test
       @worker = Minitest::Mock.new
     end
 
-    it 'yields if the worker does not use bulk process' do
+    it 'yields the next item in the chain if the worker does not use bulk process' do
       result = nil
       @chain.invoke(@worker, {}, 'default') { result = true }
       assert_equal true, result
     end
 
-    it 'does not yield and append to batch if worker uses bulk' do
+    it 'stops the chain and append to batch if worker uses bulk' do
       result = nil
       list   = Sidekiq::Paquet::List.new('TestWorker')
       item   = { 'class' => 'TestWorker', 'bulk' => true }

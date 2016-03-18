@@ -5,6 +5,14 @@ module Sidekiq
         @lname = "bulk:#{name}"
       end
 
+      def queue
+        worker_name.constantize.get_sidekiq_options['queue']
+      end
+
+      def worker_name
+        @lname.split(':').last
+      end
+
       def size
         Sidekiq.redis { |c| c.llen(@lname) }
       end

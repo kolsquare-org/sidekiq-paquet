@@ -1,6 +1,8 @@
 $TESTING = true
+ENV['RACK_ENV'] = ENV['RAILS_ENV'] = 'test'
 
 require 'minitest/autorun'
+require 'sidekiq'
 require 'sidekiq/api'
 require 'sidekiq/paquet'
 

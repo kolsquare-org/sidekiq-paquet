@@ -8,13 +8,13 @@ class TestBundle < Minitest::Test
     end
 
     describe '#append' do
-      it 'appends to the list of bulks' do
+      it 'appends to the list of bundles' do
         Sidekiq::Paquet::Bundle.append(@item)
         assert_equal 1, Sidekiq.redis { |c| c.zcard 'bundles' }
         assert_equal 'TestWorker', Sidekiq.redis { |c| c.zrange('bundles', 0, -1).first }
       end
 
-      it 'appends the args to the bulk queue' do
+      it 'appends the args to the bundle queue' do
         @item.merge!({ 'args' => ['foo', 1], 'queue' => 'default' })
         list = Sidekiq::Paquet::Bundle.new('TestWorker')
 
@@ -36,7 +36,7 @@ class TestBundle < Minitest::Test
         items.each { |i| Sidekiq::Paquet::Bundle.append(i) }
       end
 
-      it 'enqueues regular job with bulk arguments' do
+      it 'enqueues regular job with bundle arguments' do
         Sidekiq::Paquet::Bundle.enqueue_jobs
 
         assert_equal 1, @queue.size
@@ -46,14 +46,14 @@ class TestBundle < Minitest::Test
         end
       end
 
-      it 'removes items in the bulk queue after processing' do
+      it 'removes items in the bundle queue after processing' do
         list = Sidekiq::Paquet::Bundle.new('TestWorker')
         assert_equal 2, list.size
         Sidekiq::Paquet::Bundle.enqueue_jobs
         assert_equal 0, list.size
       end
 
-      it 'allows a custom bulk size' do
+      it 'allows a custom bundle size' do
         begin
           opts = TestWorker.get_sidekiq_options
           TestWorker.sidekiq_options_hash = opts.merge('bundle_size' => 1)
@@ -64,7 +64,7 @@ class TestBundle < Minitest::Test
         end
       end
 
-      it 'uses the default bulk size if none is provided' do
+      it 'uses the default bundle size if none is provided' do
         begin
           old = Sidekiq::Paquet.options[:default_bundle_size]
           Sidekiq::Paquet.options[:default_bundle_size] = 1

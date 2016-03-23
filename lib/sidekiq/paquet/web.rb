@@ -7,7 +7,7 @@ module Sidekiq
 
       def self.registered(app)
         app.get '/paquet' do
-          @lists = Sidekiq.redis { |c| c.zrange('bulks', 0, -1) }.map { |n| Bundle.new(n) }
+          @lists = Sidekiq.redis { |c| c.zrange('bundles', 0, -1) }.map { |n| Bundle.new(n) }
           erb File.read(File.join(VIEWS, 'index.erb'))
         end
       end

@@ -33,7 +33,7 @@ module Sidekiq
       # Scale interval with the number of Sidekiq processes running. Each one
       # is going to run a flusher instance. If you have 10 processes and an
       # average flush interval of 10s, it means one process is flushing every
-      # second, which is wasteful and beats the purpose of bulking.
+      # second, which is wasteful and beats the purpose of bundling.
       #
       # To avoid this, we scale the average flush interval with the number of
       # Sidekiq processes running, i.e instead of flushing every 10s, let every

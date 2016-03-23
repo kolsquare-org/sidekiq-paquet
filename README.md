@@ -9,7 +9,7 @@ Useful for grouping background API calls or intensive database inserts coming fr
 gem install 'sidekiq-paquet'
 ```
 
-sidekiq-bulk requires Sidekiq 4+.
+sidekiq-paquet requires Sidekiq 4+.
 
 ## Usage
 
@@ -57,7 +57,7 @@ You can change global configuration by modifying the `Sidekiq::Paquet.options` h
   Sidekiq::Paquet.options[:average_flush_interval] = 30 # Default is 15
 ```
 
-The `average_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_flush_interval` to 15, each process will check for new bulk jobs every 75 seconds -- so that in average, the bulk queue will be checked every 15 seconds.
+The `average_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_flush_interval` to 15, each process will check for new bundled jobs every 75 seconds -- so that in average, the bundles queue will be checked every 15 seconds.
 
 ## Contributing
 

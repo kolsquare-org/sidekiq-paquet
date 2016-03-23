@@ -1,6 +1,6 @@
 require 'helper'
 
-class TestBatch < Minitest::Test
+class TestBundle < Minitest::Test
   describe 'batch' do
     before do
       Sidekiq.redis { |c| c.flushdb }
@@ -9,16 +9,16 @@ class TestBatch < Minitest::Test
 
     describe '#append' do
       it 'appends to the list of bulks' do
-        Sidekiq::Paquet::Batch.append(@item)
-        assert_equal 1, Sidekiq.redis { |c| c.zcard 'bulks' }
-        assert_equal 'TestWorker', Sidekiq.redis { |c| c.zrange('bulks', 0, -1).first }
+        Sidekiq::Paquet::Bundle.append(@item)
+        assert_equal 1, Sidekiq.redis { |c| c.zcard 'bundles' }
+        assert_equal 'TestWorker', Sidekiq.redis { |c| c.zrange('bundles', 0, -1).first }
       end
 
       it 'appends the args to the bulk queue' do
         @item.merge!({ 'args' => ['foo', 1], 'queue' => 'default' })
-        list = Sidekiq::Paquet::List.new('TestWorker')
+        list = Sidekiq::Paquet::Bundle.new('TestWorker')
 
-        Sidekiq::Paquet::Batch.append(@item)
+        Sidekiq::Paquet::Bundle.append(@item)
         arg = list.items.first
 
         assert_equal 1, list.size
@@ -33,11 +33,11 @@ class TestBatch < Minitest::Test
           { 'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default' },
           { 'class' => 'TestWorker', 'args' => ['bar', 3], 'queue' => 'default' }
         ]
-        items.each { |i| Sidekiq::Paquet::Batch.append(i) }
+        items.each { |i| Sidekiq::Paquet::Bundle.append(i) }
       end
 
       it 'enqueues regular job with bulk arguments' do
-        Sidekiq::Paquet::Batch.enqueue_jobs
+        Sidekiq::Paquet::Bundle.enqueue_jobs
 
         assert_equal 1, @queue.size
         @queue.each do |job|
@@ -47,17 +47,17 @@ class TestBatch < Minitest::Test
       end
 
       it 'removes items in the bulk queue after processing' do
-        list = Sidekiq::Paquet::List.new('TestWorker')
+        list = Sidekiq::Paquet::Bundle.new('TestWorker')
         assert_equal 2, list.size
-        Sidekiq::Paquet::Batch.enqueue_jobs
+        Sidekiq::Paquet::Bundle.enqueue_jobs
         assert_equal 0, list.size
       end
 
       it 'allows a custom bulk size' do
         begin
           opts = TestWorker.get_sidekiq_options
-          TestWorker.sidekiq_options_hash = opts.merge('bulk_size' => 1)
-          Sidekiq::Paquet::Batch.enqueue_jobs
+          TestWorker.sidekiq_options_hash = opts.merge('bundle_size' => 1)
+          Sidekiq::Paquet::Bundle.enqueue_jobs
           assert_equal 2, @queue.size
         ensure
           TestWorker.sidekiq_options_hash = opts
@@ -66,37 +66,37 @@ class TestBatch < Minitest::Test
 
       it 'uses the default bulk size if none is provided' do
         begin
-          old = Sidekiq::Paquet.options[:default_bulk_size]
-          Sidekiq::Paquet.options[:default_bulk_size] = 1
+          old = Sidekiq::Paquet.options[:default_bundle_size]
+          Sidekiq::Paquet.options[:default_bundle_size] = 1
 
-          Sidekiq::Paquet::Batch.enqueue_jobs
+          Sidekiq::Paquet::Bundle.enqueue_jobs
           assert_equal 2, @queue.size
         ensure
-          Sidekiq::Paquet.options[:default_bulk_size] = old
+          Sidekiq::Paquet.options[:default_bundle_size] = old
         end
       end
 
       it 'allows a minimum flush interval' do
         begin
           opts = TestWorker.get_sidekiq_options
-          TestWorker.sidekiq_options_hash = opts.merge('bulk_minimum_interval' => 10)
+          TestWorker.sidekiq_options_hash = opts.merge('minimum_execution_interval' => 10)
 
           Time.stub :now, 200 do
-            Sidekiq::Paquet::Batch.enqueue_jobs
+            Sidekiq::Paquet::Bundle.enqueue_jobs
             assert_equal 1, @queue.size
           end
 
-          Sidekiq::Paquet::Batch.append({
+          Sidekiq::Paquet::Bundle.append({
             'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default'
           })
 
           Time.stub :now, 205 do
-            Sidekiq::Paquet::Batch.enqueue_jobs
+            Sidekiq::Paquet::Bundle.enqueue_jobs
             assert_equal 1, @queue.size
           end
 
           Time.stub :now, 215 do
-            Sidekiq::Paquet::Batch.enqueue_jobs
+            Sidekiq::Paquet::Bundle.enqueue_jobs
             assert_equal 2, @queue.size
           end
         ensure

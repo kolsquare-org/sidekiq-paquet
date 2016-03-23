@@ -1,18 +1,19 @@
+require 'concurrent/scheduled_task'
+
 require 'sidekiq'
 require 'sidekiq/paquet/version'
 
-require 'sidekiq/paquet/list'
-require 'sidekiq/paquet/batch'
+require 'sidekiq/paquet/bundle'
 require 'sidekiq/paquet/middleware'
-require 'sidekiq/paquet/poller'
+require 'sidekiq/paquet/flusher'
 
 module Sidekiq
   module Paquet
     DEFAULTS = {
-      default_bulk_size: 100,
-      bulk_flush_interval: nil,
-      average_bulk_flush_interval: 15,
-      dynamic_interval_scaling: true
+      default_bundle_size: 100,
+      flush_interval: nil,
+      average_flush_interval: 15,
+      initial_wait: 10
     }
 
     def self.options
@@ -21,6 +22,10 @@ module Sidekiq
 
     def self.options=(opts)
       @options = opts
+    end
+
+    def self.initial_wait
+      options[:initial_wait] + (5 * rand)
     end
   end
 end
@@ -37,11 +42,13 @@ Sidekiq.configure_server do |config|
   end
 
   config.on(:startup) do
-    config.options[:bulk_poller] = Sidekiq::Paquet::Poller.new
-    config.options[:bulk_poller].start
+    config.options[:paquet_flusher] = Sidekiq::Paquet::Flusher.new
+    Concurrent::ScheduledTask.execute(Sidekiq::Paquet.initial_wait) {
+      config.options[:paquet_flusher].start
+    }
   end
 
   config.on(:shutdown) do
-    config.options[:bulk_poller].terminate
+    config.options[:paquet_flusher].shutdown
   end
 end

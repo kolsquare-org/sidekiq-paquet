@@ -2,8 +2,8 @@ module Sidekiq
   module Paquet
     class Middleware
       def call(worker, item, queue, redis_pool = nil)
-        if item['bulk'.freeze]
-          Batch.append(item)
+        if item['bundled'.freeze]
+          Bundle.append(item)
           false
         else
           yield

@@ -17,8 +17,8 @@ class TestMiddleware < Minitest::Test
 
     it 'stops the chain and append to batch if worker uses bulk' do
       result = nil
-      list   = Sidekiq::Paquet::List.new('TestWorker')
-      item   = { 'class' => 'TestWorker', 'bulk' => true }
+      list   = Sidekiq::Paquet::Bundle.new('TestWorker')
+      item   = { 'class' => 'TestWorker', 'bundled' => true }
 
       @chain.invoke(@worker, item, 'default') { result = true }
 

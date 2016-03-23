@@ -13,13 +13,13 @@ sidekiq-bulk requires Sidekiq 4+.
 
 ## Usage
 
-Add `bulk: true` option to your worker's `sidekiq_options` to have jobs processed in bulk. The size of the bulk can be configured per worker. If not specified, the `Sidekiq::Paquet.options[:default_bulk_size]` is used.
+Add `bundled: true` option to your worker's `sidekiq_options` to have jobs processed in bulk. The size of the bundle can be configured per worker. If not specified, the `Sidekiq::Paquet.options[:default_bundle_size]` is used.
 
 ```ruby
 class ElasticIndexerWorker
   include Sidekiq::Worker
 
-  sidekiq_options bulk: true, bulk_size: 100
+  sidekiq_options bundled: true, bundle_size: 100
 
   def perform(*values)
     # Perform work with the array of values
@@ -27,7 +27,7 @@ class ElasticIndexerWorker
 end
 ```
 
-Instead of being processed by Sidekiq, jobs will be stored into a separate queue and periodically, a poller will retrieve them by slice of `bulk_size` and enqueue a regular Sidekiq job with that bulk as argument.
+Instead of being processed by Sidekiq right away, jobs will be stored into a separate queue and periodically, a separate thread will pick up this internal queue, slice `bundle_size` elements into an array and enqueue a regular Sidekiq job with that bundle as argument.
 Thus, your worker will only be invoked with an array of values, never with single values themselves.
 
 For example, if you call `perform_async` twice on the previous worker
@@ -41,23 +41,23 @@ the worker instance will receive these values as a single argument
 
 ```ruby
 [
-  { delete: { _index: 'users', _id: 1, _type: 'user' } },
-  { delete: { _index: 'users', _id: 2, _type: 'user' } }
+  [{ delete: { _index: 'users', _id: 1, _type: 'user' } }],
+  [{ delete: { _index: 'users', _id: 2, _type: 'user' } }]
 ]
 ```
 
-Every time polling happens, `sidekiq-paquet` will try to process all your workers marked for bulk. If you want to limit the time between two polling per worker, you can pass the `bulk_minimum_interval` option to sidekiq options.
+Every time flushing happens, `sidekiq-paquet` will try to process all your workers marked as bundled. If you want to limit the time between two flushing in a worker, you can pass the `minimum_execution_interval` option to sidekiq options.
 
 ## Configuration
 
 You can change global configuration by modifying the `Sidekiq::Paquet.options` hash.
 
 ```
-  Sidekiq::Paquet.options[:default_bulk_size] = 500 # Default is 100
-  Sidekiq::Paquet.options[:average_bulk_flush_interval] = 30 # Default is 15
+  Sidekiq::Paquet.options[:default_bundle_size] = 500 # Default is 100
+  Sidekiq::Paquet.options[:average_flush_interval] = 30 # Default is 15
 ```
 
-The `average_bulk_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_bulk_flush_interval` to 15, each process will check for new bulk jobs every 75 seconds -- so that in average, the bulk queue will be checked every 15 seconds.
+The `average_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_flush_interval` to 15, each process will check for new bulk jobs every 75 seconds -- so that in average, the bulk queue will be checked every 15 seconds.
 
 ## Contributing
 

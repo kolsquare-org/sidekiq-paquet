@@ -7,7 +7,7 @@ module Sidekiq
 
       def self.registered(app)
         app.get '/paquet' do
-          @lists = Sidekiq.redis { |c| c.zrange('bulks', 0, -1) }.map { |n| List.new(n) }
+          @lists = Sidekiq.redis { |c| c.zrange('bulks', 0, -1) }.map { |n| Bundle.new(n) }
           erb File.read(File.join(VIEWS, 'index.erb'))
         end
       end
@@ -17,4 +17,4 @@ module Sidekiq
 end
 
 Sidekiq::Web.register(Sidekiq::Paquet::Web)
-Sidekiq::Web.tabs['Grouping'] = 'paquet'
+Sidekiq::Web.tabs['Bundles'] = 'paquet'

@@ -42,6 +42,7 @@ Sidekiq.configure_server do |config|
   end
 
   config.on(:startup) do
+    Sidekiq::Paquet::Bundle.check_zadd_version
     config.options[:paquet_flusher] = Sidekiq::Paquet::Flusher.new
     Concurrent::ScheduledTask.execute(Sidekiq::Paquet.initial_wait) {
       config.options[:paquet_flusher].start

@@ -2,13 +2,26 @@ module Sidekiq
   module Paquet
     class Bundle
 
+      def self.check_zadd_version
+        info = Sidekiq.redis { |c| c.info }
+        @@nx_available = info && info['redis_version'] >= '3.0.2'
+      end
+
+      def self.nx_available?
+        @@nx_available
+      end
+
       def self.append(item)
         worker_name = item['class'.freeze]
         args = item.fetch('args'.freeze, [])
 
         Sidekiq.redis do |conn|
           conn.multi do
-            conn.zadd('bundles'.freeze, 0, worker_name, nx: true)
+            if nx_available?
+              conn.zadd('bundles'.freeze, 0, worker_name, nx: true)
+            else
+              conn.zadd('bundles'.freeze, 0, worker_name)
+            end
             conn.rpush("bundle:#{worker_name}", Sidekiq.dump_json(args))
           end
         end
@@ -36,7 +49,7 @@ module Sidekiq
             end
 
             conn.ltrim("bundle:#{worker}", items.size, -1)
-            conn.zadd('bundles'.freeze, now + min_interval, worker) if min_interval
+            conn.zadd('bundles'.freeze, now + min_interval, worker) if nx_available? && min_interval
           end
         end
       end

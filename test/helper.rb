@@ -13,6 +13,8 @@ Sidekiq.configure_client do |config|
   config.redis = { url: REDIS_URL, namespace: 'paquet' }
 end
 
+Sidekiq::Paquet::Bundle.check_zadd_version
+
 class TestWorker
   include Sidekiq::Worker
 end

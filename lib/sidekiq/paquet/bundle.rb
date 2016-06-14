@@ -2,25 +2,16 @@ module Sidekiq
   module Paquet
     class Bundle
 
-      def self.check_zadd_version
-        info = Sidekiq.redis { |c| c.info }
-        @@nx_available = info && info['redis_version'] >= '3.0.2'
-      end
-
-      def self.nx_available?
-        @@nx_available
-      end
-
       def self.append(item)
         worker_name = item['class'.freeze]
         args = item.fetch('args'.freeze, [])
 
         Sidekiq.redis do |conn|
           conn.multi do
-            if nx_available?
-              conn.zadd('bundles'.freeze, 0, worker_name, nx: true)
-            else
+            if Paquet.options[:compatibility_mode]
               conn.zadd('bundles'.freeze, 0, worker_name)
+            else
+              conn.zadd('bundles'.freeze, 0, worker_name, nx: true)
             end
             conn.rpush("bundle:#{worker_name}", Sidekiq.dump_json(args))
           end
@@ -40,7 +31,7 @@ module Sidekiq
             items = conn.lrange("bundle:#{worker}", 0, -1)
             items.map! { |i| Sidekiq.load_json(i) }
 
-            items.each_slice(opts.fetch('bundle_size'.freeze, Sidekiq::Paquet.options[:default_bundle_size])) do |vs|
+            items.each_slice(opts.fetch('bundle_size'.freeze, Paquet.options[:default_bundle_size])) do |vs|
               Sidekiq::Client.push(
                 'class' => worker,
                 'queue' => opts['queue'.freeze],
@@ -49,7 +40,7 @@ module Sidekiq
             end
 
             conn.ltrim("bundle:#{worker}", items.size, -1)
-            conn.zadd('bundles'.freeze, now + min_interval, worker) if nx_available? && min_interval
+            conn.zadd('bundles'.freeze, now + min_interval, worker) if !Paquet.options[:compatibility_mode] && min_interval
           end
         end
       end

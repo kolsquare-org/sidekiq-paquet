@@ -13,7 +13,8 @@ module Sidekiq
       default_bundle_size: 100,
       flush_interval: nil,
       average_flush_interval: 15,
-      initial_wait: 10
+      initial_wait: 10,
+      compatibility_mode: false
     }
 
     def self.options
@@ -22,6 +23,10 @@ module Sidekiq
 
     def self.options=(opts)
       @options = opts
+    end
+
+    def self.compatibility_mode=(v)
+      options[:compatibility_mode] = !!v
     end
 
     def self.initial_wait
@@ -42,7 +47,6 @@ Sidekiq.configure_server do |config|
   end
 
   config.on(:startup) do
-    Sidekiq::Paquet::Bundle.check_zadd_version
     config.options[:paquet_flusher] = Sidekiq::Paquet::Flusher.new
     Concurrent::ScheduledTask.execute(Sidekiq::Paquet.initial_wait) {
       config.options[:paquet_flusher].start

@@ -30,7 +30,7 @@ module Sidekiq
     end
 
     def self.initial_wait
-      options[:initial_wait] + (5 * rand)
+      options[:initial_wait] + (10 * rand)
     end
   end
 end

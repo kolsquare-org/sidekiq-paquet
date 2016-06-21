@@ -81,24 +81,21 @@ class TestBundle < Minitest::Test
           opts = TestWorker.get_sidekiq_options
           TestWorker.sidekiq_options_hash = opts.merge('minimum_execution_interval' => 10)
 
-          Time.stub :now, 200 do
-            Sidekiq::Paquet::Bundle.enqueue_jobs
-            assert_equal 1, @queue.size
-          end
+          Sidekiq::Paquet::Bundle.enqueue_jobs
+          assert_equal 1, @queue.size
 
           Sidekiq::Paquet::Bundle.append({
             'class' => 'TestWorker', 'args' => ['foo', 1], 'queue' => 'default'
           })
 
-          Time.stub :now, 205 do
-            Sidekiq::Paquet::Bundle.enqueue_jobs
-            assert_equal 1, @queue.size
-          end
+          Sidekiq::Paquet::Bundle.enqueue_jobs
+          assert_equal 1, @queue.size
 
-          Time.stub :now, 215 do
-            Sidekiq::Paquet::Bundle.enqueue_jobs
-            assert_equal 2, @queue.size
-          end
+          # Simulate key expiration in redis
+          Sidekiq.redis { |c| c.del('bundle:TestWorker:next') }
+
+          Sidekiq::Paquet::Bundle.enqueue_jobs
+          assert_equal 2, @queue.size
         ensure
           TestWorker.sidekiq_options_hash = opts
         end

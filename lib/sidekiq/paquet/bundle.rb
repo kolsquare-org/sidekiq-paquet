@@ -8,25 +8,24 @@ module Sidekiq
 
         Sidekiq.redis do |conn|
           conn.multi do
-            if Paquet.options[:compatibility_mode]
-              conn.zadd('bundles'.freeze, 0, worker_name)
-            else
-              conn.zadd('bundles'.freeze, 0, worker_name, nx: true)
-            end
+            conn.zadd('bundles'.freeze, 0, worker_name)
             conn.rpush("bundle:#{worker_name}", Sidekiq.dump_json(args))
           end
         end
       end
 
       def self.enqueue_jobs
-        now = Time.now.to_f
         Sidekiq.redis do |conn|
-          workers = conn.zrangebyscore('bundles'.freeze, '-inf', now)
+          workers = conn.zrange('bundles'.freeze, 0, -1)
 
           workers.each do |worker|
             klass = worker.constantize
             opts  = klass.get_sidekiq_options
             min_interval = opts['minimum_execution_interval'.freeze]
+
+            if min_interval
+              next unless conn.set("bundle:#{worker}:next", 'queue'.freeze, nx: true, ex: min_interval)
+            end
 
             items = conn.lrange("bundle:#{worker}", 0, -1)
             items.map! { |i| Sidekiq.load_json(i) }
@@ -40,7 +39,6 @@ module Sidekiq
             end
 
             conn.ltrim("bundle:#{worker}", items.size, -1)
-            conn.zadd('bundles'.freeze, now + min_interval, worker) if !Paquet.options[:compatibility_mode] && min_interval
           end
         end
       end

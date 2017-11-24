@@ -30,7 +30,8 @@ module Sidekiq
             items = conn.lrange("bundle:#{worker}", 0, -1)
             items.map! { |i| Sidekiq.load_json(i) }
 
-            items.each_slice(opts.fetch('bundle_size'.freeze, Paquet.options[:default_bundle_size])) do |vs|
+            bundle_size = opts['bundle_size'.freeze] || Paquet.options[:default_bundle_size]
+            items.each_slice(bundle_size) do |vs|
               Sidekiq::Client.push(
                 'class' => worker,
                 'queue' => opts['queue'.freeze],

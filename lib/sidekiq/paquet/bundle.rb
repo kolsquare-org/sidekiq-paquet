@@ -19,7 +19,7 @@ module Sidekiq
           workers = conn.zrange('bundles'.freeze, 0, -1)
 
           workers.each do |worker|
-            klass = worker.constantize
+            klass = Object.const_get(worker)
             opts  = klass.get_sidekiq_options
             min_interval = opts['minimum_execution_interval'.freeze]
 

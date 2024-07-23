@@ -10,7 +10,7 @@ module Sidekiq
       end
 
       def start
-        Sidekiq.logger.info('Starting paquet flusher 👋')
+        Sidekiq.logger.info('Starting paquet flusher 🚀')
         @task.execute
       end
 

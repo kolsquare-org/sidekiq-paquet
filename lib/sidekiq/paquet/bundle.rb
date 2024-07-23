@@ -27,7 +27,7 @@ module Sidekiq
               next unless conn.set("bundle:#{worker}:next", 'queue'.freeze, nx: true, ex: min_interval)
             end
 
-            items = conn.lrange("bundle:#{worker}", 0, 100000)
+            items = conn.lrange("bundle:#{worker}", 0, 5000)
             items.map! { |i| Sidekiq.load_json(i) }
 
             bundle_size = opts['bundle_size'.freeze] || Paquet.options[:default_bundle_size]

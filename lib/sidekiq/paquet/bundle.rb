@@ -27,7 +27,7 @@ module Sidekiq
               next unless conn.set("bundle:#{worker}:next", 'queue'.freeze, nx: true, ex: min_interval)
             end
 
-            items = conn.lrange("bundle:#{worker}", 0, -1)
+            items = conn.lrange("bundle:#{worker}", 0, 5000)
             items.map! { |i| Sidekiq.load_json(i) }
 
             bundle_size = opts['bundle_size'.freeze] || Paquet.options[:default_bundle_size]
@@ -37,9 +37,9 @@ module Sidekiq
                 'queue' => opts['queue'.freeze],
                 'args'  => vs
               )
-            end
 
-            conn.ltrim("bundle:#{worker}", items.size, -1)
+              vs.size.times { conn.lpop("bundle:#{worker}") }
+            end
           end
         end
       end

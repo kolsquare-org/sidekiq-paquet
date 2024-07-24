@@ -14,7 +14,8 @@ module Sidekiq
       flush_interval: nil,
       average_flush_interval: 15,
       initial_wait: 10,
-      compatibility_mode: false
+      compatibility_mode: false,
+      error_handlers: []
     }
 
     def self.options

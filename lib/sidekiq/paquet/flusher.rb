@@ -6,11 +6,21 @@ module Sidekiq
 
       def initialize
         @task  = Concurrent::TimerTask.new(
-          execution_interval: execution_interval) { Bundle.enqueue_jobs }
+          execution_interval: execution_interval) {
+            begin
+              Bundle.enqueue_jobs
+            rescue => e
+              raise e unless Sidekiq::Paquet.options[:error_handlers]
+
+              Sidekiq::Paquet.options[:error_handlers]&.each do |handler|
+                handler.call(e)
+              end
+            end
+          }
       end
 
       def start
-        Sidekiq.logger.info('Starting paquet flusher 🚀')
+        Sidekiq.logger.info('Starting paquet flusher 🎁')
         @task.execute
       end
 

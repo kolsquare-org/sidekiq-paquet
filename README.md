@@ -59,6 +59,14 @@ You can change global configuration by modifying the `Sidekiq::Paquet.options` h
 
 The `average_flush_interval` represent the average time elapsed between two polling of values. This scales with the number of sidekiq processes you're running. So if you have 5 sidekiq processes, and set the `average_flush_interval` to 15, each process will check for new bundled jobs every 75 seconds -- so that in average, the bundles queue will be checked every 15 seconds.
 
+## Errors handling
+You can catch all errors occuring inside one of the flushing process by passing an error handler block to `error_handlers` option in sidekiq options.
+```ruby
+  Sidekiq::Paquet.options[:default_bundle_size] = ->(e) { 
+    # Do something with the exception ...
+  }
+```
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/ccocchi/sidekiq-paquet. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.

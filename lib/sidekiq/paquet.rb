@@ -6,6 +6,7 @@ require 'sidekiq/paquet/version'
 require 'sidekiq/paquet/bundle'
 require 'sidekiq/paquet/middleware'
 require 'sidekiq/paquet/flusher'
+require 'sidekiq/paquet/web'
 
 module Sidekiq
   module Paquet

@@ -7,9 +7,9 @@ module Sidekiq
         args = item.fetch('args'.freeze, [])
 
         Sidekiq.redis do |conn|
-          conn.multi do
-            conn.zadd('bundles'.freeze, 0, worker_name)
-            conn.rpush("bundle:#{worker_name}", Sidekiq.dump_json(args))
+          conn.multi do |pipeline|
+            pipeline.zadd('bundles'.freeze, 0, worker_name)
+            pipeline.rpush("bundle:#{worker_name}", Sidekiq.dump_json(args))
           end
         end
       end

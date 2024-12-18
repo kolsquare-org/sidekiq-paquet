@@ -5,7 +5,7 @@ class TestMiddleware < Minitest::Test
     before do
       Sidekiq.redis { |c| c.flushdb }
       @chain = Sidekiq::Middleware::Chain.new
-      @chain.add Sidekiq::Paquet::Middleware
+      @chain.add Sidekiq::Paquet::ClientMiddleware
       @worker = Minitest::Mock.new
     end
 

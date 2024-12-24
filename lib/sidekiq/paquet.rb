@@ -39,13 +39,13 @@ end
 
 Sidekiq.configure_client do |config|
   config.client_middleware do |chain|
-    chain.add Sidekiq::Paquet::Middleware
+    chain.add Sidekiq::Paquet::ServerMiddleware
   end
 end
 
 Sidekiq.configure_server do |config|
   config.client_middleware do |chain|
-    chain.add Sidekiq::Paquet::Middleware
+    chain.add Sidekiq::Paquet::ClientMiddleware
   end
 
   config.on(:startup) do

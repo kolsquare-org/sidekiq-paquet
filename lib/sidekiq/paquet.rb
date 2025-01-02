@@ -1,14 +1,22 @@
 require 'concurrent/scheduled_task'
 
-require 'sidekiq'
+require 'sidekiq/api'
 require 'sidekiq/paquet/version'
-
 require 'sidekiq/paquet/bundle'
 require 'sidekiq/paquet/middleware'
 require 'sidekiq/paquet/flusher'
 require 'sidekiq/paquet/web'
 
 module Sidekiq
+
+  def self.paquet_flusher=(value)
+    @paquet_flusher = value
+  end
+
+  def self.paquet_flusher
+    @paquet_flusher
+  end
+
   module Paquet
     DEFAULTS = {
       default_bundle_size: 100,
@@ -49,13 +57,13 @@ Sidekiq.configure_server do |config|
   end
 
   config.on(:startup) do
-    config.options[:paquet_flusher] = Sidekiq::Paquet::Flusher.new
+    Sidekiq.paquet_flusher = Sidekiq::Paquet::Flusher.new
     Concurrent::ScheduledTask.execute(Sidekiq::Paquet.initial_wait) {
-      config.options[:paquet_flusher].start
+      Sidekiq.paquet_flusher.start
     }
   end
 
   config.on(:shutdown) do
-    config.options[:paquet_flusher].shutdown
+    Sidekiq.paquet_flusher.shutdown
   end
 end

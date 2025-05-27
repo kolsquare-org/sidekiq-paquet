@@ -1,5 +1,7 @@
 # Sidekiq::Paquet
 
+[![CI](https://github.com/kolsquare-org/sidekiq-paquet/actions/workflows/ci.yml/badge.svg)](https://github.com/kolsquare-org/sidekiq-paquet/actions/workflows/ci.yml)
+
 Instead of enqueueing and processing jobs one at a time, enqueue them one by one and process them in bulk.
 Useful for grouping background API calls or intensive database inserts coming from multiple sources.
 
@@ -69,7 +71,7 @@ You can catch all errors occuring inside one of the flushing process by passing 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/ccocchi/sidekiq-paquet. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/kolsquare-org/sidekiq-paquet. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 ## License
 

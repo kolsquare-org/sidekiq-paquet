@@ -1,0 +1,12 @@
+AllCops:
+  RubyInterpreters:
+    - ruby
+
+  DefaultFormatter: progress
+  DisplayCopNames: true
+  DisplayStyleGuide: true
+  DisabledByDefault: true
+
+plugins:
+  - rubocop-minitest
+  - rubocop-rake
